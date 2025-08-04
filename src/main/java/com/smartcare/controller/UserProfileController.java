@@ -8,6 +8,8 @@ import com.smartcare.service.UserProfileService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -18,13 +20,21 @@ import org.springframework.web.bind.annotation.*;
 @Tag(name = "User Profile", description = "User profile and health profile management endpoints")
 public class UserProfileController {
 
+    private static final Logger logger = LoggerFactory.getLogger(UserProfileController.class);
+
     @Autowired
     private UserProfileService userProfileService;
 
     @GetMapping
     @Operation(summary = "Get user profile", description = "Retrieve current user's profile information")
     public ResponseEntity<?> getUserProfile(@AuthenticationPrincipal UserPrincipal currentUser) {
+        long startTime = System.currentTimeMillis();
+        logger.info("UserProfileController | getUserProfile | method entry");
+        
         User user = userProfileService.getUserProfile(currentUser.getId());
+        
+        long executionTime = System.currentTimeMillis() - startTime;
+        logger.info("UserProfileController | getUserProfile | method exit with {}ms", executionTime);
         return ResponseEntity.ok(new ApiResponse(true, "Profile retrieved successfully", user));
     }
 
@@ -33,10 +43,19 @@ public class UserProfileController {
     public ResponseEntity<?> updateUserProfile(
             @AuthenticationPrincipal UserPrincipal currentUser,
             @Valid @RequestBody User userDetails) {
+        long startTime = System.currentTimeMillis();
+        logger.info("UserProfileController | updateUserProfile | method entry");
+        
         try {
             User updatedUser = userProfileService.updateUserProfile(currentUser.getId(), userDetails);
+            
+            long executionTime = System.currentTimeMillis() - startTime;
+            logger.info("UserProfileController | updateUserProfile | method exit with {}ms", executionTime);
             return ResponseEntity.ok(new ApiResponse(true, "Profile updated successfully", updatedUser));
         } catch (RuntimeException e) {
+            long executionTime = System.currentTimeMillis() - startTime;
+            logger.error("UserProfileController | updateUserProfile | method exit with Error : {}. after ms: {}", 
+                        executionTime, e.getMessage());
             return ResponseEntity.badRequest()
                     .body(new ApiResponse(false, e.getMessage()));
         }
@@ -45,9 +64,23 @@ public class UserProfileController {
     @GetMapping("/health")
     @Operation(summary = "Get health profile", description = "Retrieve user's health profile information")
     public ResponseEntity<?> getHealthProfile(@AuthenticationPrincipal UserPrincipal currentUser) {
-        return userProfileService.getHealthProfile(currentUser.getId())
-                .map(healthProfile -> ResponseEntity.ok(new ApiResponse(true, "Health profile found", healthProfile)))
-                .orElse(ResponseEntity.ok(new ApiResponse(true, "No health profile found", null)));
+        long startTime = System.currentTimeMillis();
+        logger.info("UserProfileController | getHealthProfile | method entry");
+        
+        try {
+            ResponseEntity<?> response = userProfileService.getHealthProfile(currentUser.getId())
+                    .map(healthProfile -> ResponseEntity.ok(new ApiResponse(true, "Health profile found", healthProfile)))
+                    .orElse(ResponseEntity.ok(new ApiResponse(true, "No health profile found", null)));
+            
+            long executionTime = System.currentTimeMillis() - startTime;
+            logger.info("UserProfileController | getHealthProfile | method exit with {}ms", executionTime);
+            return response;
+        } catch (Exception e) {
+            long executionTime = System.currentTimeMillis() - startTime;
+            logger.error("UserProfileController | getHealthProfile | method exit with Error : {}. after ms: {}", 
+                        executionTime, e.getMessage());
+            throw e;
+        }
     }
 
     @PostMapping("/health")
@@ -55,11 +88,20 @@ public class UserProfileController {
     public ResponseEntity<?> createOrUpdateHealthProfile(
             @AuthenticationPrincipal UserPrincipal currentUser,
             @Valid @RequestBody HealthProfile healthProfile) {
+        long startTime = System.currentTimeMillis();
+        logger.info("UserProfileController | createOrUpdateHealthProfile | method entry");
+        
         try {
             HealthProfile savedProfile = userProfileService.createOrUpdateHealthProfile(
                     currentUser.getId(), healthProfile);
+            
+            long executionTime = System.currentTimeMillis() - startTime;
+            logger.info("UserProfileController | createOrUpdateHealthProfile | method exit with {}ms", executionTime);
             return ResponseEntity.ok(new ApiResponse(true, "Health profile saved successfully", savedProfile));
         } catch (RuntimeException e) {
+            long executionTime = System.currentTimeMillis() - startTime;
+            logger.error("UserProfileController | createOrUpdateHealthProfile | method exit with Error : {}. after ms: {}", 
+                        executionTime, e.getMessage());
             return ResponseEntity.badRequest()
                     .body(new ApiResponse(false, e.getMessage()));
         }
@@ -68,10 +110,19 @@ public class UserProfileController {
     @PostMapping("/complete-tour")
     @Operation(summary = "Complete tour", description = "Mark the application tour as completed for the user")
     public ResponseEntity<?> completeTour(@AuthenticationPrincipal UserPrincipal currentUser) {
+        long startTime = System.currentTimeMillis();
+        logger.info("UserProfileController | completeTour | method entry");
+        
         try {
             User updatedUser = userProfileService.completeTour(currentUser.getId());
+            
+            long executionTime = System.currentTimeMillis() - startTime;
+            logger.info("UserProfileController | completeTour | method exit with {}ms", executionTime);
             return ResponseEntity.ok(new ApiResponse(true, "Tour completed successfully", updatedUser));
         } catch (RuntimeException e) {
+            long executionTime = System.currentTimeMillis() - startTime;
+            logger.error("UserProfileController | completeTour | method exit with Error : {}. after ms: {}", 
+                        executionTime, e.getMessage());
             return ResponseEntity.badRequest()
                     .body(new ApiResponse(false, e.getMessage()));
         }
@@ -82,10 +133,19 @@ public class UserProfileController {
     public ResponseEntity<?> updateProfilePicture(
             @AuthenticationPrincipal UserPrincipal currentUser,
             @RequestParam String profilePictureUrl) {
+        long startTime = System.currentTimeMillis();
+        logger.info("UserProfileController | updateProfilePicture | method entry");
+        
         try {
             User updatedUser = userProfileService.updateProfilePicture(currentUser.getId(), profilePictureUrl);
+            
+            long executionTime = System.currentTimeMillis() - startTime;
+            logger.info("UserProfileController | updateProfilePicture | method exit with {}ms", executionTime);
             return ResponseEntity.ok(new ApiResponse(true, "Profile picture updated successfully", updatedUser));
         } catch (RuntimeException e) {
+            long executionTime = System.currentTimeMillis() - startTime;
+            logger.error("UserProfileController | updateProfilePicture | method exit with Error : {}. after ms: {}", 
+                        executionTime, e.getMessage());
             return ResponseEntity.badRequest()
                     .body(new ApiResponse(false, e.getMessage()));
         }
