@@ -31,6 +31,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                                   FilterChain filterChain) throws ServletException, IOException {
         try {
             String jwt = getJwtFromRequest(request);
+            String requestPath = request.getRequestURI();
+            
+            logger.debug("Processing request: {} {}", request.getMethod(), requestPath);
 
             if (StringUtils.hasText(jwt) && tokenProvider.validateToken(jwt)) {
                 Long userId = tokenProvider.getUserIdFromJWT(jwt);
@@ -41,12 +44,38 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
 
                 SecurityContextHolder.getContext().setAuthentication(authentication);
+                logger.debug("Set authentication for user: {}", userDetails.getUsername());
+            } else {
+                logger.debug("No valid JWT token found for request: {}", requestPath);
             }
         } catch (Exception ex) {
             logger.error("Could not set user authentication in security context", ex);
         }
 
         filterChain.doFilter(request, response);
+    }
+
+    @Override
+    protected boolean shouldNotFilter(HttpServletRequest request) throws ServletException {
+        String path = request.getRequestURI();
+        String method = request.getMethod();
+        
+        // Skip filter for auth endpoints
+        if (path.startsWith("/auth/")) {
+            logger.debug("Skipping JWT filter for auth endpoint: {} {}", method, path);
+            return true;
+        }
+        
+        // Skip filter for public endpoints
+        if (path.equals("/doctors/search") || 
+            path.startsWith("/h2-console/") ||
+            path.startsWith("/swagger-ui/") ||
+            path.startsWith("/v3/api-docs/")) {
+            logger.debug("Skipping JWT filter for public endpoint: {} {}", method, path);
+            return true;
+        }
+        
+        return false;
     }
 
     private String getJwtFromRequest(HttpServletRequest request) {

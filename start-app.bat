@@ -1,0 +1,9 @@
+@echo off
+echo Starting Smart Care Services...
+echo.
+echo Setting JAVA_HOME...
+set JAVA_HOME=C:\Program Files\Java\jdk-17
+echo JAVA_HOME set to: %JAVA_HOME%
+echo.
+echo Starting Spring Boot application...
+mvnw.cmd spring-boot:run
